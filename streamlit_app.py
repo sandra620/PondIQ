@@ -15,6 +15,9 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 from typing import Optional
+import sys
+import os
+import subprocess
 
 # ── Page config (must be first Streamlit call) ──────────────────────
 st.set_page_config(
@@ -777,8 +780,25 @@ def render_history() -> None:
 
 
 # ── Main ─────────────────────────────────────────────────────────────
+def start_api() -> None:
+    """Start the FastAPI server (pondiq_api.app) in a background process.
+
+    Uses the same Python executable running Streamlit so the environment
+    is consistent. Logs are suppressed by default; set `API_PORT` env var
+    to change the port.
+    """
+    port = int(os.environ.get("API_PORT", 8000))
+    cmd = [sys.executable, "-m", "uvicorn", "pondiq_api:app", "--host", "0.0.0.0", "--port", str(port)]
+    try:
+        with open(os.devnull, "w") as devnull:
+            subprocess.Popen(cmd, stdout=devnull, stderr=devnull, stdin=devnull)
+    except Exception:
+        return
+
 def main() -> None:
     inject_css()
+    # Start the FastAPI server in background so the Streamlit UI can call it
+    start_api()
 
     # Init session state
     if "page" not in st.session_state:
