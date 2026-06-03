@@ -16,3 +16,10 @@ dependencies = [
     "uvicorn>=0.34.0",
     "xgboost>=2.1.0",
 ]
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=1.7.0"]
+build-backend = "poetry.core.masonry.api"
