@@ -261,6 +261,47 @@ def inject_css() -> None:
         .history-entry:hover {
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
+        .history-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 22px;
+        }
+        .history-body {
+            flex: 1;
+            min-width: 0;
+        }
+        .history-decision {
+            margin: 0;
+            font-weight: 700;
+            color: #0f2340;
+            font-size: 14px;
+        }
+        .history-date {
+            margin: 2px 0 0;
+            color: #4a6b8a;
+            font-size: 12px;
+        }
+        .history-right {
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .history-do {
+            margin: 0;
+            font-family: 'Playfair Display', Georgia, serif;
+            font-weight: 700;
+            color: #1a5fa8;
+            font-size: 14px;
+        }
+        .history-ph {
+            margin: 0;
+            color: #4a6b8a;
+            font-size: 11px;
+        }
 
         /* ── Input fields ────────────────────────────────── */
         .stNumberInput input {
@@ -359,6 +400,114 @@ def inject_css() -> None:
             background: linear-gradient(to bottom, rgba(15,25,35,0.15) 0%, rgba(15,25,35,0.7) 100%);
         }
 
+        .hero-brand {
+            position: absolute;
+            top: 48px;
+            left: 24px;
+            z-index: 2;
+        }
+        .hero-brand-inner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15,35,64,0.55);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 8px 18px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .hero-brand-text {
+            font-family: 'Roboto Slab', serif;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: -0.3px;
+        }
+
+        .hero-text {
+            position: absolute;
+            bottom: 18px;
+            left: 20px;
+            right: 20px;
+            z-index: 2;
+        }
+        .hero-title {
+            font-family: 'Roboto Slab', serif !important;
+            color: #ffffff !important;
+            margin: 0 0 4px !important;
+            font-size: 22px !important;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+            line-height: 1.3;
+        }
+        .hero-sub {
+            color: rgba(255,255,255,0.82);
+            margin: 0;
+            font-size: 13px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        /* ── How it works block ────────────────────────── */
+        .how-it-works-block {
+            border-radius: 14px;
+            overflow: hidden;
+            height: 148px;
+            margin-bottom: 16px;
+            position: relative;
+            background: #0f2340;
+        }
+        .how-it-works-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+        .how-it-works-gradient {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(15,35,64,0.82) 0%, rgba(15,35,64,0.2) 70%);
+        }
+        .how-it-works-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .how-it-works-label {
+            margin: 0 0 8px;
+            color: #7ec8f0;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .how-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        .how-step-num {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #1a5fa8;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .how-step-text {
+            color: #e8f3fc;
+            font-size: 13px;
+        }
+
         /* ── Grids ───────────────────────────────────────── */
         .param-grid {
             display: grid;
@@ -411,12 +560,276 @@ def inject_css() -> None:
         }
 
         /* ── Responsive ──────────────────────────────────── */
-        @media (max-width: 640px) {
-            .block-container { padding: 0 0.5rem 0 !important; }
-            .decision-banner .title { font-size: 22px !important; }
-            .welcome-hero { height: 220px; border-radius: 0; }
-            .pondiq-header { padding: 18px 20px 22px; }
-            .pondiq-footer { margin: 32px -0.5rem 0; padding: 20px 1rem; }
+        /* ── Tablet (≤768px) ──────────────────────────── */
+        @media (max-width: 768px) {
+            html, body, [class*="css"] {
+                font-size: 15px;
+            }
+            h1 { font-size: 26px !important; }
+            h2 { font-size: 20px !important; }
+            h3 { font-size: 17px !important; }
+
+            .block-container {
+                padding: 0 0.75rem 0 !important;
+                max-width: 100% !important;
+            }
+
+            .pondiq-header {
+                padding: 16px 16px 20px !important;
+                margin: 0 -0.75rem 20px !important;
+            }
+            .pondiq-header h2 { font-size: 18px !important; }
+            .pondiq-header .subtitle { font-size: 12px; }
+
+            .decision-banner {
+                padding: 22px 16px 28px !important;
+                margin: 0 -0.75rem 20px !important;
+            }
+            .decision-banner .title {
+                font-size: 22px !important;
+            }
+            .decision-banner .icon-circle {
+                width: 44px; height: 44px;
+                font-size: 24px;
+            }
+
+            .param-grid, .welcome-grid, .result-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px;
+            }
+
+            .pondiq-card {
+                padding: 16px;
+            }
+
+            .welcome-hero {
+                height: 200px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }
+
+            .hero-brand {
+                top: 20px;
+                left: 14px;
+            }
+            .hero-brand-inner {
+                padding: 6px 14px;
+                border-radius: 10px;
+            }
+            .hero-brand-text {
+                font-size: 16px;
+            }
+
+            .hero-text {
+                bottom: 12px;
+                left: 14px;
+                right: 14px;
+            }
+            .hero-title {
+                font-size: 18px !important;
+                margin: 0 0 2px !important;
+            }
+            .hero-sub {
+                font-size: 11px;
+            }
+
+            .how-it-works-block {
+                height: 120px;
+                border-radius: 10px;
+            }
+            .how-it-works-text {
+                padding: 12px 16px;
+            }
+            .how-it-works-label {
+                font-size: 10px;
+                margin: 0 0 6px;
+            }
+
+            .history-entry {
+                flex-wrap: wrap;
+                padding: 12px 14px;
+            }
+            .history-entry .history-right {
+                width: 100%;
+                text-align: left !important;
+                margin-top: 8px;
+                display: flex;
+                gap: 16px;
+            }
+            .history-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            .history-decision {
+                font-size: 13px;
+            }
+            .history-date {
+                font-size: 11px;
+            }
+            .history-do {
+                font-size: 13px;
+            }
+            .history-ph {
+                font-size: 10px;
+            }
+
+            .pondiq-footer {
+                margin: 28px -0.75rem 0 !important;
+                padding: 16px 1rem !important;
+                font-size: 11px;
+            }
+
+            .stButton > button[kind="primary"],
+            .stButton > button[kind="secondary"] {
+                width: 100% !important;
+                padding: 12px 20px !important;
+                font-size: 14px !important;
+            }
+
+            .stNumberInput input {
+                font-size: 14px !important;
+                padding: 8px 12px !important;
+            }
+        }
+
+        /* ── Phone (≤480px) ─────────────────────────────── */
+        @media (max-width: 480px) {
+            html, body, [class*="css"] {
+                font-size: 14px;
+            }
+            h1 { font-size: 22px !important; }
+            h2 { font-size: 18px !important; }
+            h3 { font-size: 16px !important; }
+
+            .block-container {
+                padding: 0 0.5rem 0 !important;
+            }
+
+            .pondiq-header {
+                padding: 14px 12px 16px !important;
+                margin: 0 -0.5rem 16px !important;
+            }
+            .pondiq-header h2 { font-size: 17px !important; }
+
+            .decision-banner {
+                padding: 18px 12px 22px !important;
+                margin: 0 -0.5rem 16px !important;
+            }
+            .decision-banner .title {
+                font-size: 20px !important;
+            }
+            .decision-banner .banner-content {
+                gap: 10px;
+            }
+            .decision-banner .icon-circle {
+                width: 38px; height: 38px;
+                font-size: 20px;
+            }
+
+            .param-grid, .welcome-grid, .result-grid {
+                gap: 10px;
+            }
+
+            .pondiq-card {
+                padding: 12px;
+            }
+
+            .welcome-hero {
+                height: 160px;
+                border-radius: 6px;
+                margin-bottom: 16px;
+            }
+
+            .hero-brand {
+                top: 12px;
+                left: 10px;
+            }
+            .hero-brand-inner {
+                padding: 5px 10px;
+                border-radius: 8px;
+            }
+            .hero-brand-text {
+                font-size: 13px;
+            }
+
+            .hero-text {
+                bottom: 8px;
+                left: 10px;
+                right: 10px;
+            }
+            .hero-title {
+                font-size: 15px !important;
+            }
+            .hero-sub {
+                font-size: 10px;
+            }
+
+            .how-it-works-block {
+                height: 100px;
+                border-radius: 8px;
+                margin-bottom: 12px;
+            }
+            .how-it-works-text {
+                padding: 8px 12px;
+            }
+            .how-it-works-label {
+                font-size: 9px;
+                margin: 0 0 4px;
+            }
+            .how-step-text {
+                font-size: 11px;
+            }
+
+            .history-entry {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 8px;
+                padding: 10px 12px;
+            }
+            .history-entry .history-right {
+                width: 100%;
+                text-align: left !important;
+                margin-top: 2px;
+                display: flex;
+                gap: 12px;
+            }
+            .history-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+                border-radius: 8px;
+            }
+            .history-decision {
+                font-size: 13px;
+            }
+            .history-date {
+                font-size: 10px;
+            }
+            .history-do {
+                font-size: 13px;
+            }
+            .history-ph {
+                font-size: 10px;
+            }
+
+            .tip-row {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .pondiq-footer {
+                margin: 24px -0.5rem 0 !important;
+                padding: 14px 0.75rem !important;
+                font-size: 10px;
+            }
+
+            .stButton > button[kind="primary"],
+            .stButton > button[kind="secondary"] {
+                padding: 11px 16px !important;
+                font-size: 13px !important;
+                border-radius: 8px !important;
+            }
         }
         </style>
         """,
@@ -454,20 +867,13 @@ def render_welcome() -> None:
             f'<div class="welcome-hero">'
             f'<img src="{HERO_B64}" alt="Fresh tilapia harvest"/>'
             f'<div class="overlay"></div>'
-            f'<div style="position:absolute;top:48px;left:24px;">'
-            f'<div style="display:flex;align-items:center;gap:8px;background:rgba(15,35,64,0.55);'
-            f'backdrop-filter:blur(8px);border-radius:12px;padding:8px 18px;'
-            f'border:1px solid rgba(255,255,255,0.2);">'
-            f'<span style="font-family:\'Roboto Slab\',serif;color:#ffffff;font-weight:700;'
-            f'font-size:20px;letter-spacing:-0.3px;">AQUASENSE AI</span>'
+            f'<div class="hero-brand">'
+            f'<div class="hero-brand-inner">'
+            f'<span class="hero-brand-text">AQUASENSE AI</span>'
             f'</div></div>'
-            f'<div style="position:absolute;bottom:18px;left:20px;right:20px;">'
-            f'<h1 style="font-family:\'Roboto Slab\',serif;color:#ffffff;margin:0 0 4px;'
-            f'font-size:22px;text-shadow:0 1px 6px rgba(0,0,0,0.4);line-height:1.3;">'
-            f'AI-Powered Feed Optimisation for Ghanaian Fish Farmers</h1>'
-            f'<p style="color:rgba(255,255,255,0.82);margin:0;font-size:13px;'
-            f'text-shadow:0 1px 3px rgba(0,0,0,0.3);">'
-            f'Instant feeding decisions from 6 water readings.</p>'
+            f'<div class="hero-text">'
+            f'<h1 class="hero-title">AI-Powered Feed Optimisation for Ghanaian Fish Farmers</h1>'
+            f'<p class="hero-sub">Instant feeding decisions from 6 water readings.</p>'
             f'</div></div>',
             unsafe_allow_html=True,
         )
@@ -511,23 +917,17 @@ def render_welcome() -> None:
             ["Measure 6 water parameters", "Enter readings into AQUASENSE AI", "Receive your feeding decision"], 1
         ):
             steps_html += (
-                f'<div style="display:flex;align-items:center;gap:8px;margin-top:5px;">'
-                f'<div style="width:18px;height:18px;border-radius:50%;background:#1a5fa8;color:#ffffff;'
-                f'font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;'
-                f'flex-shrink:0;">{i}</div>'
-                f'<span style="color:#e8f3fc;font-size:13px;">{step}</span></div>'
+                f'<div class="how-step">'
+                f'<div class="how-step-num">{i}</div>'
+                f'<span class="how-step-text">{step}</span></div>'
             )
         st.markdown(
-            f'<div style="border-radius:14px;overflow:hidden;height:148px;margin-bottom:16px;'
-            f'position:relative;background:#0f2340;">'
+            f'<div class="how-it-works-block">'
             f'<img src="{HOW_IT_B64}" alt="Fish farmer feeding tilapia" '
-            f'style="width:100%;height:100%;object-fit:cover;object-position:center;"/>'
-            f'<div style="position:absolute;inset:0;'
-            f'background:linear-gradient(90deg,rgba(15,35,64,0.82) 0%,rgba(15,35,64,0.2) 70%);"></div>'
-            f'<div style="position:absolute;top:0;left:0;bottom:0;padding:16px 20px;'
-            f'display:flex;flex-direction:column;justify-content:center;">'
-            f'<p style="margin:0 0 8px;color:#7ec8f0;font-size:11px;font-weight:700;'
-            f'text-transform:uppercase;letter-spacing:1px;">How it works</p>'
+            f'class="how-it-works-img"/>'
+            f'<div class="how-it-works-gradient"></div>'
+            f'<div class="how-it-works-text">'
+            f'<p class="how-it-works-label">How it works</p>'
             f'{steps_html}</div></div>',
             unsafe_allow_html=True,
         )
@@ -1042,16 +1442,15 @@ def render_history() -> None:
         dc = decision_cfg[entry["decision"]]
         st.markdown(
             f'<div class="history-entry">'
-            f'<div style="width:42px;height:42px;border-radius:10px;background:{dc["bg"]};'
-            f'display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
-            f'<span style="font-size:22px;">{dc["icon"]}</span></div>'
-            f'<div style="flex:1;min-width:0;">'
-            f'<p style="margin:0;font-weight:700;color:#0f2340;font-size:14px;">{entry["decision"]}</p>'
-            f'<p style="margin:2px 0 0;color:#4a6b8a;font-size:12px;">{entry["date"]} · {entry["time"]}</p>'
+            f'<div class="history-icon" style="background:{dc["bg"]};">'
+            f'<span>{dc["icon"]}</span></div>'
+            f'<div class="history-body">'
+            f'<p class="history-decision">{entry["decision"]}</p>'
+            f'<p class="history-date">{entry["date"]} · {entry["time"]}</p>'
             f'</div>'
-            f'<div style="text-align:right;flex-shrink:0;">'
-            f'<p style="margin:0;font-family:Playfair Display,Georgia,serif;font-weight:700;color:#1a5fa8;font-size:14px;">DO {entry["do"]}</p>'
-            f'<p style="margin:0;color:#4a6b8a;font-size:11px;">pH {entry["ph"]} · {entry["temp"]}°C</p>'
+            f'<div class="history-right">'
+            f'<p class="history-do">DO {entry["do"]}</p>'
+            f'<p class="history-ph">pH {entry["ph"]} · {entry["temp"]}°C</p>'
             f'</div></div>',
             unsafe_allow_html=True,
         )
