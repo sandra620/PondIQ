@@ -1,5 +1,6 @@
 """
 PondIQ Streamlit App — Responsive feeding advisor for fish farmers.
+Matches Figma prototype: blue #1a5fa8 palette, sliders, inline results.
 
 Run:
     streamlit run streamlit_app.py
@@ -18,14 +19,33 @@ from typing import Optional
 import sys
 import os
 import subprocess
+import base64
+from pathlib import Path
 
 # ── Page config (must be first Streamlit call) ──────────────────────
 st.set_page_config(
-    page_title="PondIQ — Fish Feeding Advisor",
+    page_title="AQUASENSE AI — Fish Feeding Advisor",
     page_icon="🐟",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+# ── Image helpers ────────────────────────────────────────────────────
+ASSETS_DIR = Path(__file__).parent / "assets"
+
+
+def _img_to_b64(path: Path) -> str:
+    """Read an image file and return a base64 data URI."""
+    if not path.exists():
+        return ""
+    ext = path.suffix.lower().replace(".", "")
+    mime = "jpeg" if ext in ("jpg", "jpeg") else ext
+    with open(path, "rb") as f:
+        return f"data:image/{mime};base64,{base64.b64encode(f.read()).decode()}"
+
+
+HERO_B64 = _img_to_b64(ASSETS_DIR / "hero.jpg")
+HOW_IT_B64 = _img_to_b64(ASSETS_DIR / "how-it-works.jpg")
 
 # ── Responsive CSS ───────────────────────────────────────────────────
 
@@ -34,85 +54,188 @@ def inject_css() -> None:
     st.markdown(
         """
         <style>
-        /* ── Base ─────────────────────────────────────────── */
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Roboto+Slab:wght@400;600;700&display=swap');
+        /* ── Fonts ──────────────────────────────────────── */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
 
         html, body, [class*="css"] {
-            font-family: 'Noto Sans', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #1a1a2e;
+            -webkit-font-smoothing: antialiased;
         }
 
         h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2 {
-            font-family: 'Roboto Slab', serif !important;
-            color: #0f2340;
+            font-family: 'Playfair Display', Georgia, serif !important;
+            font-weight: 700;
+            color: #0f1923;
+            letter-spacing: -0.3px;
         }
 
-        /* ── Global background ────────────────────────────── */
+        h1 { font-size: 32px !important; }
+        h2 { font-size: 24px !important; }
+        h3 { font-size: 20px !important; }
+
+        p, li, span, div {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* ── Global ──────────────────────────────────────── */
         .stApp {
-            background: #eef4fb;
+            background: #f0f4f8;
         }
 
-        /* ── Max-width container for mobile-friendly feel ─── */
         .block-container {
-            max-width: 720px !important;
-            padding: 1rem 1rem 2rem !important;
+            max-width: 1100px !important;
+            margin: 0 auto !important;
+            padding: 0 2rem 0 !important;
+            background: transparent;
+            min-height: 100vh;
         }
 
-        /* ── Cards ────────────────────────────────────────── */
+        .app-inner {
+            padding: 0;
+            max-width: 100%;
+        }
+
+        /* ── Header bars ─────────────────────────────────── */
+        .pondiq-header {
+            background: linear-gradient(135deg, #1a5fa8 0%, #134b87 100%);
+            padding: 24px 32px 28px;
+            box-shadow: 0 4px 24px rgba(26,95,168,0.18);
+            margin: 0;
+        }
+        .pondiq-header .header-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .pondiq-header h2 {
+            color: #ffffff !important;
+            font-family: 'Playfair Display', Georgia, serif !important;
+            margin: 0;
+            font-size: 22px !important;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+        .pondiq-header .subtitle {
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            font-weight: 400;
+            margin: 4px 0 0;
+        }
+        .pondiq-header .progress-bar {
+            background: rgba(255,255,255,0.15);
+            border-radius: 3px;
+            height: 3px;
+            margin-top: 16px;
+        }
+        .pondiq-header .progress-bar-fill {
+            background: rgba(255,255,255,0.5);
+            border-radius: 3px;
+            height: 3px;
+            width: 100%;
+        }
+
+        /* ── Cards ───────────────────────────────────────── */
         .pondiq-card {
             background: #ffffff;
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid rgba(15,35,64,0.09);
-            box-shadow: 0 2px 10px rgba(15,35,64,0.06);
-            margin-bottom: 14px;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+            margin-bottom: 16px;
+            transition: box-shadow 0.2s ease;
         }
 
-        /* ── Decision banners ─────────────────────────────── */
+        /* ── Section labels ──────────────────────────────── */
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin: 0 0 8px;
+        }
+
+        /* ── Decision banners ────────────────────────────── */
         .decision-banner {
-            border-radius: 16px;
-            padding: 22px;
+            border-radius: 0;
+            padding: 28px 2rem 36px;
             position: relative;
             overflow: hidden;
             color: #ffffff;
-            margin-bottom: 14px;
+            margin: 0 -2rem 28px;
         }
-        .decision-banner.feed-now   { background: #0e7a3e; }
-        .decision-banner.reduce     { background: #b45309; }
-        .decision-banner.stop       { background: #b91c1c; }
+        .decision-banner.feed-now   { background: linear-gradient(135deg, #0d8040 0%, #0a6b35 100%); }
+        .decision-banner.reduce     { background: linear-gradient(135deg, #c25a0a 0%, #a34b08 100%); }
+        .decision-banner.stop       { background: linear-gradient(135deg, #c1292e 0%, #a12226 100%); }
 
+        .decision-banner .deco-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+        }
+        .decision-banner .deco-1 { top: -30px; right: -30px; width: 120px; height: 120px; }
+        .decision-banner .deco-2 { bottom: -40px; left: -20px; width: 100px; height: 100px; }
+
+        .decision-banner .banner-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        .decision-banner .icon-circle {
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 28px;
+        }
         .decision-banner .label {
-            font-size: 11px;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
-            opacity: 0.7;
+            letter-spacing: 1.5px;
+            opacity: 0.65;
             font-weight: 600;
             margin-bottom: 4px;
         }
         .decision-banner .title {
-            font-family: 'Roboto Slab', serif;
-            font-size: 24px;
+            font-family: 'Playfair Display', Georgia, serif !important;
+            font-size: 30px !important;
             font-weight: 700;
+            letter-spacing: -0.5px;
         }
 
-        /* ── Parameter cards ──────────────────────────────── */
+        /* ── Parameter cards ─────────────────────────────── */
         .param-card {
             background: #ffffff;
-            border-radius: 16px;
-            padding: 16px;
-            border: 1px solid rgba(15,35,64,0.09);
-            box-shadow: 0 1px 6px rgba(15,35,64,0.06);
-            margin-bottom: 10px;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            margin-bottom: 0;
+            transition: border-color 0.2s ease;
+        }
+        .param-card:hover {
+            border-color: rgba(26,95,168,0.2);
         }
 
-        /* ── Tip row ──────────────────────────────────────── */
+        /* ── Tip row ─────────────────────────────────────── */
         .tip-row {
             display: flex;
             gap: 12px;
             align-items: flex-start;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
         .tip-number {
-            width: 24px; height: 24px;
+            width: 26px; height: 26px;
+            min-width: 26px;
             border-radius: 50%;
             color: #fff;
             display: flex;
@@ -120,85 +243,180 @@ def inject_css() -> None:
             justify-content: center;
             font-size: 12px;
             font-weight: 700;
-            flex-shrink: 0;
         }
 
-        /* ── History entry ─────────────────────────────────── */
+        /* ── History entry ────────────────────────────────── */
         .history-entry {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             background: #ffffff;
-            border-radius: 14px;
-            padding: 14px 16px;
-            border: 1px solid rgba(15,35,64,0.08);
-            box-shadow: 0 1px 4px rgba(15,35,64,0.05);
+            border-radius: 10px;
+            padding: 16px 18px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
             margin-bottom: 8px;
+            transition: box-shadow 0.15s ease;
+        }
+        .history-entry:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
-        /* ── Result hero band ─────────────────────────────── */
-        .result-hero {
-            padding: 20px 20px 40px;
-            margin: -1rem -1rem 0;
-            position: relative;
-            overflow: hidden;
+        /* ── Input fields ────────────────────────────────── */
+        .stNumberInput input {
+            color: #1a1a2e !important;
+            font-weight: 500 !important;
+            font-size: 15px !important;
+            font-family: 'Inter', sans-serif !important;
+            background: #f8fafc !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 8px !important;
+            padding: 10px 14px !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
         }
-        .result-hero.feed-now   { background: #0e7a3e; }
-        .result-hero.reduce     { background: #b45309; }
-        .result-hero.stop       { background: #b91c1c; }
+        .stNumberInput input:focus {
+            border-color: #1a5fa8 !important;
+            box-shadow: 0 0 0 3px rgba(26,95,168,0.1) !important;
+            outline: none !important;
+        }
 
-        .result-hero .back-btn {
-            background: rgba(255,255,255,0.15);
-            border: none;
+        /* ── Primary button ──────────────────────────────── */
+        .stButton > button {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            font-weight: 600 !important;
+            transition: all 0.2s ease !important;
+        }
+        .stButton > button[kind="primary"] {
+            background: #1a5fa8 !important;
+            border: none !important;
+            color: #ffffff !important;
+            font-size: 15px !important;
+            border-radius: 10px !important;
+            padding: 14px 28px !important;
+            box-shadow: 0 2px 8px rgba(26,95,168,0.25) !important;
+        }
+        .stButton > button[kind="primary"]:hover {
+            background: #15508f !important;
+            box-shadow: 0 4px 16px rgba(26,95,168,0.35) !important;
+            transform: translateY(-1px);
+        }
+
+        /* ── Secondary button ────────────────────────────── */
+        .stButton > button[kind="secondary"] {
+            background: #ffffff !important;
+            color: #374151 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 10px !important;
+            font-size: 14px !important;
+            padding: 13px 24px !important;
+        }
+        .stButton > button[kind="secondary"]:hover {
+            background: #f9fafb !important;
+            border-color: #9ca3af !important;
+            color: #1a1a2e !important;
+        }
+
+        /* ── Expander ────────────────────────────────────── */
+        .streamlit-expanderHeader {
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            color: #64748b !important;
+            border: none !important;
+            background: transparent !important;
+        }
+        .info-box {
+            background: #eff6ff;
             border-radius: 8px;
-            padding: 8px 12px;
-            cursor: pointer;
-            color: #ffffff;
+            padding: 12px 14px;
+            border: 1px solid rgba(26,95,168,0.1);
+        }
+        .info-box p {
+            margin: 0;
             font-size: 13px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 18px;
-        }
-        .result-hero .hero-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            opacity: 0.65;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-        .result-hero .hero-title {
-            font-family: 'Roboto Slab', serif;
-            font-size: 26px;
-            font-weight: 700;
-            color: #ffffff;
+            color: #374151;
+            line-height: 1.6;
         }
 
-        /* ── Bottom navigation ────────────────────────────── */
-        .pondiq-nav {
-            position: sticky;
-            bottom: 0;
-            z-index: 100;
-            background: #ffffff;
-            border-top: 1px solid rgba(15,35,64,0.1);
-            box-shadow: 0 -4px 16px rgba(15,35,64,0.08);
-            padding: 8px 16px 12px;
-            margin: 0 -1rem;
+        /* ── Welcome hero ────────────────────────────────── */
+        .welcome-hero {
+            position: relative;
+            width: 100%;
+            height: 360px;
+            overflow: hidden;
+            background: #0f1923;
+            border-radius: 16px;
+            margin-bottom: 32px;
+        }
+        .welcome-hero img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+        .welcome-hero .overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(15,25,35,0.15) 0%, rgba(15,25,35,0.7) 100%);
         }
 
-        /* ── Responsive breakpoints ────────────────────────── */
-        @media (max-width: 480px) {
-            .block-container { padding: 0.5rem 0.5rem 1.5rem !important; }
-            .decision-banner .title { font-size: 20px; }
+        /* ── Grids ───────────────────────────────────────── */
+        .param-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .welcome-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
         }
 
-        @media (min-width: 768px) {
-            .block-container { max-width: 640px !important; }
+        @media (max-width: 768px) {
+            .param-grid, .welcome-grid, .result-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        @media (min-width: 1024px) {
-            .block-container { max-width: 720px !important; }
+        /* ── Footer ──────────────────────────────────────── */
+        .pondiq-footer {
+            text-align: center;
+            padding: 32px 2rem 20px;
+            margin: 40px -2rem 0;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        /* ── Success / warning boxes ─────────────────────── */
+        .stAlert {
+            border-radius: 10px !important;
+            font-size: 14px !important;
+        }
+
+        /* ── Progress bar ────────────────────────────────── */
+        .stProgress > div > div {
+            background: #e5e7eb !important;
+        }
+
+        /* ── Captions ────────────────────────────────────── */
+        .stCaption {
+            color: #9ca3af !important;
+            font-size: 12px !important;
+        }
+
+        /* ── Responsive ──────────────────────────────────── */
+        @media (max-width: 640px) {
+            .block-container { padding: 0 0.5rem 0 !important; }
+            .decision-banner .title { font-size: 22px !important; }
+            .welcome-hero { height: 220px; border-radius: 0; }
+            .pondiq-header { padding: 18px 20px 22px; }
+            .pondiq-footer { margin: 32px -0.5rem 0; padding: 20px 1rem; }
         }
         </style>
         """,
@@ -207,7 +425,7 @@ def inject_css() -> None:
 
 
 # ── API Client ───────────────────────────────────────────────────────
-API_BASE = "http://localhost:8000"
+API_BASE = "http://localhost:8001"
 
 
 def api_health() -> dict | None:
@@ -228,329 +446,236 @@ def api_predict(data: dict) -> dict | None:
         return None
 
 
-# ── Navigation ───────────────────────────────────────────────────────
-def render_nav() -> str:
-    """Return the active page key. Renders a bottom nav on mobile-like layout."""
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("🏠 Home", key="nav_home", use_container_width=True,
-                     type="primary" if st.session_state.page == "welcome" else "secondary"):
-            st.session_state.page = "welcome"
-            st.rerun()
-    with col2:
-        if st.button("🧪 Check Pond", key="nav_check", use_container_width=True,
-                     type="primary" if st.session_state.page == "entry" else "secondary"):
-            st.session_state.page = "entry"
-            st.rerun()
-    with col3:
-        if st.button("📋 History", key="nav_history", use_container_width=True,
-                     type="primary" if st.session_state.page == "history" else "secondary"):
-            st.session_state.page = "history"
-            st.rerun()
-    return st.session_state.get("page", "welcome")
-
-
 # ── Page: Welcome ────────────────────────────────────────────────────
 def render_welcome() -> None:
-    # Hero image
-    hero_url = (
-        "https://images.unsplash.com/photo-1649347173558-a305d7b8ff98"
-        "?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800"
-    )
-    fish_url = (
-        "https://images.unsplash.com/photo-1607629194532-53c98b8180da"
-        "?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800"
-    )
-
-    # Hero section
-    st.image(hero_url, use_container_width=True)
-    st.markdown(
-        """
-        <div style="text-align:center; margin:-0.5rem 0 1rem;">
-            <span style="font-size:20px;">🐟</span>
-            <span style="font-family:'Roboto Slab',serif;font-weight:700;font-size:16px;color:#1a5fa8;"> PondIQ</span>
-        </div>
-        <h2 style="text-align:center;">Smarter pond management starts here.</h2>
-        <p style="text-align:center;color:#4a6b8a;">Instant feeding decisions from 6 water readings.</p>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # What is PondIQ card
-    with st.container():
-        st.markdown('<div class="pondiq-card">', unsafe_allow_html=True)
+    # ── Hero photo ───────────────────────────────────────────
+    if HERO_B64:
         st.markdown(
-            '<p style="font-size:11px;font-weight:700;color:#4a6b8a;text-transform:uppercase;letter-spacing:1.5px;">'
-            'What is PondIQ?</p>',
+            f'<div class="welcome-hero">'
+            f'<img src="{HERO_B64}" alt="Fresh tilapia harvest"/>'
+            f'<div class="overlay"></div>'
+            f'<div style="position:absolute;top:48px;left:24px;">'
+            f'<div style="display:flex;align-items:center;gap:8px;background:rgba(15,35,64,0.55);'
+            f'backdrop-filter:blur(8px);border-radius:12px;padding:8px 18px;'
+            f'border:1px solid rgba(255,255,255,0.2);">'
+            f'<span style="font-family:\'Roboto Slab\',serif;color:#ffffff;font-weight:700;'
+            f'font-size:20px;letter-spacing:-0.3px;">AQUASENSE AI</span>'
+            f'</div></div>'
+            f'<div style="position:absolute;bottom:18px;left:20px;right:20px;">'
+            f'<h1 style="font-family:\'Roboto Slab\',serif;color:#ffffff;margin:0 0 4px;'
+            f'font-size:22px;text-shadow:0 1px 6px rgba(0,0,0,0.4);line-height:1.3;">'
+            f'AI-Powered Feed Optimisation for Ghanaian Fish Farmers</h1>'
+            f'<p style="color:rgba(255,255,255,0.82);margin:0;font-size:13px;'
+            f'text-shadow:0 1px 3px rgba(0,0,0,0.3);">'
+            f'Instant feeding decisions from 6 water readings.</p>'
+            f'</div></div>',
             unsafe_allow_html=True,
         )
+    else:
         st.markdown(
-            "PondIQ is a **professional feeding advisor** for fish farmers. "
-            "Enter 6 water quality readings from your pond and instantly receive "
-            "a science-based recommendation on whether to feed your fish."
+            '<div style="height:200px;background:#1a5fa8;display:flex;align-items:center;justify-content:center;">'
+            '<h1 style="color:#ffffff;font-family:\'Roboto Slab\',serif;">AQUASENSE AI</h1></div>',
+            unsafe_allow_html=True,
         )
-        st.markdown(
-            "Overfeeding wastes resources and degrades water quality. "
-            "PondIQ helps you make the right call — every single day."
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
 
-    # How it works with fish image
-    st.image(fish_url, use_container_width=True)
+    st.markdown('<div class="app-inner">', unsafe_allow_html=True)
+
+    # Desktop 2-column: About card + How it works side by side
+    st.markdown('<div class="welcome-grid">', unsafe_allow_html=True)
+
+    # Left column: What is AQUASENSE AI
+    st.markdown('<div>', unsafe_allow_html=True)
     st.markdown(
-        '<p style="font-size:11px;font-weight:700;color:#4a6b8a;text-transform:uppercase;letter-spacing:1px;">'
-        'How it works</p>',
+        '<div class="pondiq-card">'
+        '<p style="margin:0 0 10px;font-size:11px;font-weight:700;color:#4a6b8a;'
+        'text-transform:uppercase;letter-spacing:1.5px;">What is AQUASENSE AI?</p>'
+        '<p style="margin:0 0 12px;color:#0f2340;line-height:1.7;font-size:15px;">'
+        'AQUASENSE AI is a <strong>professional feeding advisor</strong> for fish farmers. '
+        'Enter 6 water quality readings from your pond and instantly receive '
+        'a science-based recommendation on whether to feed your fish.</p>'
+        '<p style="margin:0;color:#0f2340;line-height:1.7;font-size:15px;">'
+        'Overfeeding wastes resources and degrades water quality. '
+        'AQUASENSE AI helps you make the right call — every single day.</p>'
+        '</div>',
         unsafe_allow_html=True,
     )
-    steps = [
-        "Measure 6 water parameters",
-        "Enter readings into PondIQ",
-        "Receive your feeding decision",
-    ]
-    for i, step in enumerate(steps, 1):
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Right column: How it works + Parameters
+    st.markdown('<div>', unsafe_allow_html=True)
+
+    # How it works
+    if HOW_IT_B64:
+        steps_html = ""
+        for i, step in enumerate(
+            ["Measure 6 water parameters", "Enter readings into AQUASENSE AI", "Receive your feeding decision"], 1
+        ):
+            steps_html += (
+                f'<div style="display:flex;align-items:center;gap:8px;margin-top:5px;">'
+                f'<div style="width:18px;height:18px;border-radius:50%;background:#1a5fa8;color:#ffffff;'
+                f'font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;'
+                f'flex-shrink:0;">{i}</div>'
+                f'<span style="color:#e8f3fc;font-size:13px;">{step}</span></div>'
+            )
         st.markdown(
-            f'<span style="display:inline-flex;align-items:center;gap:8px;margin:4px 0;">'
-            f'<span style="width:20px;height:20px;border-radius:50%;background:#1a5fa8;'
-            f'color:#fff;font-size:11px;display:inline-flex;align-items:center;'
-            f'justify-content:center;">{i}</span>'
-            f'<span style="font-size:13px;color:#0f2340;">{step}</span></span><br>',
+            f'<div style="border-radius:14px;overflow:hidden;height:148px;margin-bottom:16px;'
+            f'position:relative;background:#0f2340;">'
+            f'<img src="{HOW_IT_B64}" alt="Fish farmer feeding tilapia" '
+            f'style="width:100%;height:100%;object-fit:cover;object-position:center;"/>'
+            f'<div style="position:absolute;inset:0;'
+            f'background:linear-gradient(90deg,rgba(15,35,64,0.82) 0%,rgba(15,35,64,0.2) 70%);"></div>'
+            f'<div style="position:absolute;top:0;left:0;bottom:0;padding:16px 20px;'
+            f'display:flex;flex-direction:column;justify-content:center;">'
+            f'<p style="margin:0 0 8px;color:#7ec8f0;font-size:11px;font-weight:700;'
+            f'text-transform:uppercase;letter-spacing:1px;">How it works</p>'
+            f'{steps_html}</div></div>',
             unsafe_allow_html=True,
         )
 
     # Parameters measured
-    st.markdown("---")
     st.markdown(
-        '<p style="font-size:11px;font-weight:700;color:#4a6b8a;text-transform:uppercase;letter-spacing:1.5px;">'
-        'Parameters measured</p>',
+        '<p style="margin:0 0 10px;font-size:11px;font-weight:700;color:#4a6b8a;'
+        'text-transform:uppercase;letter-spacing:1.5px;">Parameters measured</p>',
         unsafe_allow_html=True,
     )
     params = [
-        ("💧", "Dissolved Oxygen (DO)"),
-        ("⚗️", "pH Level"),
-        ("🧪", "Ammonia (mg/L)"),
-        ("🌡️", "Temperature"),
-        ("🔬", "Nitrate (PPM)"),
-        ("🌊", "Turbidity"),
+        "Dissolved Oxygen (DO)", "pH Level", "Ammonia (mg/L)",
+        "Temperature", "Nitrate (PPM)", "Turbidity",
     ]
     cols = st.columns(2)
-    for i, (emoji, label) in enumerate(params):
+    for i, label in enumerate(params):
         with cols[i % 2]:
             st.markdown(
-                f'<div class="pondiq-card" style="padding:10px 12px;">'
-                f'<span style="font-size:15px;">{emoji}</span> '
-                f'<span style="font-size:12px;color:#0f2340;font-weight:500;">{label}</span>'
+                f'<div style="background:#ffffff;border-radius:10px;padding:10px 12px;'
+                f'border:1px solid rgba(15,35,64,0.08);margin-bottom:8px;">'
+                f'<span style="font-size:12px;color:#0f2340;font-weight:500;line-height:1.3;">{label}</span>'
                 f'</div>',
                 unsafe_allow_html=True,
             )
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)  # close welcome-grid
 
     # CTA
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🚀 Start Pond Check →", use_container_width=True, type="primary"):
+    if st.button("✨  Start Pond Check  →", use_container_width=True, type="primary", key="welcome_cta"):
         st.session_state.page = "entry"
         st.rerun()
     st.caption("Free to use · Works on basic mobile data · No account needed")
 
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ── Page: Data Entry & Prediction ────────────────────────────────────
+
+# ── Page: Data Entry & Inline Prediction ─────────────────────────────
 READINGS = [
-    {"id": "do",          "label": "Dissolved Oxygen (DO)", "emoji": "💧", "min": 0.0,
-     "max": 14.0, "step": 0.1,  "unit": " mg/L", "good": "5–9 mg/L is ideal"},
-    {"id": "ph",          "label": "pH Level",              "emoji": "⚗️", "min": 4.0,
-        "max": 10.0, "step": 0.1,  "unit": "",       "good": "6.5–8.5 is optimal"},
-    {"id": "ammonia",     "label": "Ammonia (mg/L)",        "emoji": "🧪", "min": 0.0,
-     "max": 5.0,  "step": 0.05, "unit": " mg/L", "good": "Below 0.5 mg/L is safe"},
-    {"id": "temperature", "label": "Temperature",           "emoji": "🌡️", "min": 10.0,
-        "max": 40.0, "step": 0.5,  "unit": "°C",    "good": "26–32°C is best"},
-    {"id": "nitrate",     "label": "Nitrate (PPM)",         "emoji": "🔬", "min": 0.0,
-     "max": 200.0, "step": 1.0,  "unit": " ppm",  "good": "Below 40 ppm is safe"},
-    {"id": "turbidity",   "label": "Turbidity",             "emoji": "🌊", "min": 1.0,
-        "max": 5.0,  "step": 1.0,  "unit": "",       "good": "2–3 = slightly green (ideal)"},
+    {"id": "do", "label": "Dissolved Oxygen (DO)", "emoji": "💧", "min": 0.0, "max": 14.0,
+     "step": 0.1, "unit": " mg/L", "good": "5–9 mg/L is ideal",
+     "desc": "Measure with a DO meter or test kit near the pond surface. Low DO stresses fish and reduces feed intake."},
+    {"id": "ph", "label": "pH Level", "emoji": "⚗️", "min": 4.0, "max": 10.0,
+     "step": 0.1, "unit": "", "good": "6.5–8.5 is optimal",
+     "desc": "Use a pH test strip or meter. Test in the morning before noon for the most accurate reading."},
+    {"id": "ammonia", "label": "Ammonia (mg/L)", "emoji": "🧪", "min": 0.0, "max": 5.0,
+     "step": 0.05, "unit": " mg/L", "good": "Below 0.5 mg/L is safe",
+     "desc": "Use an ammonia test kit. High ammonia causes gill damage and suppresses appetite."},
+    {"id": "temperature", "label": "Temperature", "emoji": "🌡️", "min": 10.0, "max": 40.0,
+     "step": 0.5, "unit": "°C", "good": "26–32°C is best",
+     "desc": "Measure with a thermometer just below the pond surface, away from any inlet pipes."},
+    {"id": "nitrate", "label": "Nitrate (PPM)", "emoji": "🔬", "min": 0.0, "max": 200.0,
+     "step": 1.0, "unit": " ppm", "good": "Below 40 ppm is safe",
+     "desc": "Use a nitrate test kit. Elevated nitrate over time indicates poor water exchange."},
+    {"id": "turbidity", "label": "Turbidity", "emoji": "🌊", "min": 1.0, "max": 5.0,
+     "step": 1.0, "unit": "", "good": "2–3 = slightly green (ideal)",
+     "desc": "Estimate water clarity visually — can you see your hand 30 cm below the surface?"},
 ]
 
-TURBIDITY_LABELS = {1: "Crystal Clear", 2: "Slight Colour",
-                    3: "Green-Tinted", 4: "Cloudy", 5: "Very Turbid"}
-
+TURBIDITY_LABELS = {1: "Crystal Clear", 2: "Slight Colour", 3: "Green-Tinted", 4: "Cloudy", 5: "Very Turbid"}
 
 DEFAULTS: dict[str, float] = {
-    "do": 6.5, "ph": 7.2, "ammonia": 0.2,
-    "temperature": 28.0, "nitrate": 20.0, "turbidity": 2.0,
+    "do": 6.5, "ph": 7.2, "ammonia": 0.2, "temperature": 28.0, "nitrate": 20.0, "turbidity": 2.0,
 }
 
 
-def _render_slider(reading: dict) -> None:
-    """Render a single parameter slider card."""
-    key = reading["id"]
+def _slider_decimals(step: float) -> int:
+    if step < 0.1:
+        return 2
+    elif step < 1:
+        return 1
+    return 0
 
-    # Initialise session state
+
+def _render_slider_card(reading: dict) -> None:
+    """Render a parameter card with number input for direct value entry."""
+    key = reading["id"]
     if key not in st.session_state:
         st.session_state[key] = DEFAULTS[key]
 
-    # Card wrapper
+    dec = _slider_decimals(reading["step"])
+
     with st.container():
+        
+
+        # Header: label + good range
         st.markdown(
-            f'<div class="param-card">'
-            f'<div style="display:flex;justify-content:space-between;align-items:center;">'
-            f'<span style="font-size:18px;">{reading["emoji"]}</span>'
-            f'<span style="font-weight:600;color:#0f2340;font-size:14px;flex:1;margin-left:8px;">{reading["label"]}</span>'
-            f'</div>'
-            f'<p style="color:#4a6b8a;font-size:12px;margin:4px 0 8px 26px;">{reading["good"]}</p>',
+            f'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">'
+            f'<div>'
+            f'<p style="margin:0;font-weight:600;color:#0f2340;font-size:14px;">{reading["label"]}</p>'
+            f'<p style="margin:0;color:#4a6b8a;font-size:12px;">{reading["good"]}</p>'
+            f'</div></div>',
             unsafe_allow_html=True,
         )
 
-        # Value display
-        current_val = st.session_state[key]
-        decimals = 2 if reading["step"] < 0.1 else (
-            1 if reading["step"] < 1 else 0)
-        display_val = f"{current_val:.{decimals}f}{reading['unit']}"
-        turb_label = TURBIDITY_LABELS.get(
-            int(current_val), "") if key == "turbidity" else ""
-        label_extra = (
-            f' <span style="background:#daeaf8;border-radius:6px;padding:2px 8px;font-size:11px;">'
-            f'{turb_label}</span>' if turb_label else ""
-        )
-
-        st.markdown(
-            f'<span style="font-family:Roboto Slab,serif;font-size:24px;font-weight:700;color:#1a5fa8;">'
-            f'{display_val}</span>{label_extra}',
-            unsafe_allow_html=True,
-        )
-
-        # Slider — key matches session state variable name
-        st.slider(
-            label=reading["label"],
-            min_value=reading["min"],
-            max_value=reading["max"],
-            step=reading["step"],
-            key=key,
-            label_visibility="collapsed",
-        )
-
-        col_min, col_max = st.columns(2)
-        with col_min:
-            st.caption(f"{reading['min']}{reading['unit']}")
-        with col_max:
+        # Info expander
+        with st.expander(f"ℹ️  About {reading['label']}"):
             st.markdown(
-                f'<p style="text-align:right;color:#4a6b8a;font-size:11px;margin:0;">'
-                f'{reading["max"]}{reading["unit"]}</p>',
+                f'<div class="info-box"><p>{reading["desc"]}</p></div>',
+                unsafe_allow_html=True,
+            )
+
+        # Number input for direct value entry
+        col_input, col_unit = st.columns([3, 1])
+        with col_input:
+            st.number_input(
+                label=reading["label"],
+                step=reading["step"],
+                key=key,
+                label_visibility="collapsed",
+                format=f"%.{dec}f",
+            )
+        with col_unit:
+            # Turbidity label
+            val = st.session_state[key]
+            display_label = TURBIDITY_LABELS.get(int(val), "") if key == "turbidity" else ""
+            label_text = display_label or reading["unit"]
+            st.markdown(
+                f'<div style="display:flex;align-items:center;height:100%;padding-top:4px;">'
+                f'<span style="font-size:14px;font-weight:600;color:#4a6b8a;">{label_text}</span>'
+                f'</div>',
                 unsafe_allow_html=True,
             )
 
         st.markdown("</div>", unsafe_allow_html=True)
 
 
-def render_entry() -> None:
-    st.markdown("## 🧪 Water Quality Readings")
-    st.caption("Enter all 6 parameters, then tap the button below.")
-
-    # ── Handle reset BEFORE any widgets are created ──────────────────
-    # Setting widget-bound session-state keys is only allowed *before*
-    # the corresponding widget is instantiated in the current script run.
-    if st.session_state.get("_reset_trigger"):
-        for k, v in DEFAULTS.items():
-            st.session_state[k] = v
-        st.session_state._reset_trigger = False
-        st.session_state.pop("_last_result", None)
-
-    # Check server health once
-    health = api_health()
-    server_ok = health is not None
-
-    if server_ok:
-        st.success("✅ PondIQ ML model connected")
-    else:
-        st.warning(
-            "⚠️ ML model offline — make sure the API is running (`uv run pondiq_api.py`)")
-
-    st.markdown("---")
-
-    # Render sliders
-    for reading in READINGS:
-        _render_slider(reading)
-
-    # Action buttons
-    st.markdown("<br>", unsafe_allow_html=True)
-    col_act, col_reset = st.columns([3, 1])
-    with col_act:
-        predict_clicked = st.button(
-            "✨ Get Recommendation & Prediction",
-            use_container_width=True,
-            type="primary",
-        )
-    with col_reset:
-        reset_clicked = st.button(
-            "🔄 Reset", key="entry_reset", use_container_width=True)
-
-    if reset_clicked:
-        st.session_state._reset_trigger = True
-        st.rerun()
-
-    # Prediction
-    if predict_clicked:
-        input_data = {
-            "do": st.session_state.do,
-            "ph": st.session_state.ph,
-            "ammonia": st.session_state.ammonia,
-            "temperature": st.session_state.temperature,
-            "nitrate": st.session_state.nitrate,
-            "turbidity": st.session_state.turbidity,
-        }
-        with st.spinner("Analysing with ML model…"):
-            result = api_predict(input_data)
-
-        if result:
-            st.session_state._last_result = result
-            st.session_state._last_input = input_data
-            # ── Save to history ───────────────────────────
-            now = datetime.now()
-            hour_12 = now.hour % 12 or 12
-            ampm = "AM" if now.hour < 12 else "PM"
-            entry = {
-                "date": now.strftime("%a, %d %b"),
-                "time": f"{hour_12}:{now.strftime('%M')} {ampm}",
-                "decision": "Feed Now" if result["label"] == "Prime Feed" else result["label"],
-                "do": input_data["do"],
-                "ph": input_data["ph"],
-                "ammonia": input_data["ammonia"],
-                "temp": input_data["temperature"],
-                "nitrate": input_data["nitrate"],
-                "turbidity": input_data["turbidity"],
-            }
-            if "_history" not in st.session_state:
-                st.session_state._history = []
-            st.session_state._history.insert(0, entry)
-            # ───────────────────────────────────────────────
-            st.session_state.page = "result"
-            st.rerun()
-        else:
-            st.error(
-                "Could not reach the ML model. Make sure the PondIQ API is running:\n\n"
-                "```bash\ncd PondIQ-main && uv run pondiq_api.py\n```"
-            )
-
-
-def render_result_page() -> None:
-    """Full-page prediction result screen."""
+def render_result() -> None:
+    """Standalone prediction result page."""
     result = st.session_state.get("_last_result")
     if not result:
         st.session_state.page = "entry"
         st.rerun()
         return
 
-    label = result["label"]
-    # Map API class name to display name
+    label = result.get("label", "Feed Now")
     if label == "Prime Feed":
         label = "Feed Now"
-    confidence = result["confidence"]
+    confidence = result.get("confidence", 0.85)
     probs = result.get("probabilities", {})
-    # Remap probability keys for display
     if "Prime Feed" in probs:
         probs["Feed Now"] = probs.pop("Prime Feed")
     warnings = result.get("warning_flags", [])
 
     configs = {
-        "Feed Now":     {"css_class": "feed-now",  "icon": "✅", "tip_bg": "#0e7a3e"},
-        "Reduce Feed":  {"css_class": "reduce",    "icon": "⚠️", "tip_bg": "#b45309"},
-        "Halt Feeding": {"css_class": "stop",      "icon": "🚫", "tip_bg": "#b91c1c"},
+        "Feed Now":     {"css_class": "feed-now", "icon": "✅", "tip_bg": "#0e7a3e"},
+        "Reduce Feed":  {"css_class": "reduce",   "icon": "⚠️", "tip_bg": "#b45309"},
+        "Halt Feeding": {"css_class": "stop",     "icon": "🚫", "tip_bg": "#b91c1c"},
     }
     cfg = configs.get(label, configs["Feed Now"])
     conf_pct = round(confidence * 100)
@@ -576,12 +701,6 @@ def render_result_page() -> None:
         ],
     }
 
-    next_check_map = {
-        "Feed Now": "Tomorrow at the same time",
-        "Reduce Feed": "This evening — retest DO and ammonia",
-        "Halt Feeding": "Tomorrow morning — retest all 6 parameters",
-    }
-
     reasons_map = {
         "Feed Now": (
             f"ML model confidence: {conf_pct}%. All water quality parameters are within "
@@ -598,164 +717,323 @@ def render_result_page() -> None:
         ),
     }
 
-    # ── Hero band ───────────────────────────────────────────────
+    next_check_map = {
+        "Feed Now": "Tomorrow at the same time",
+        "Reduce Feed": "This evening — retest DO and ammonia",
+        "Halt Feeding": "Tomorrow morning — retest all 6 parameters",
+    }
+
+    tips = tips_map.get(label, tips_map["Feed Now"])
+
+    # ── Decision banner (hero) ────────────────────────────
     st.markdown(
-        f'<div class="result-hero {cfg["css_class"]}">'
-        f'<div class="hero-label">Today\'s Recommendation</div>'
-        f'<div class="hero-title">{cfg["icon"]} {label.upper()}</div>'
-        f"</div>",
+        f'<div class="decision-banner {cfg["css_class"]}" style="border-radius:0;margin:0 -2rem 24px;padding:28px 2rem 36px;">'
+        f'<div class="deco-circle deco-1"></div>'
+        f'<div class="deco-circle deco-2"></div>'
+        f'<div class="banner-content">'
+        f'<div class="icon-circle">{cfg["icon"]}</div>'
+        f'<div>'
+        f'<p class="label">Today\'s Decision</p>'
+        f'<h2 class="title">{label.upper()}</h2>'
+        f'</div></div></div>',
         unsafe_allow_html=True,
     )
 
-    # Back button
-    if st.button("← Back to Readings", key="back_entry", use_container_width=False):
+    st.markdown('<div class="app-inner">', unsafe_allow_html=True)
+
+    # ── Back button ────────────────────────────────────────
+    if st.button("←  Back to Readings", key="result_back_entry", use_container_width=False):
+        st.session_state.pop("_last_result", None)
+        st.session_state.pop("_last_input", None)
         st.session_state.page = "entry"
         st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Confidence ─────────────────────────────────────────────
-    st.markdown(
-        '<p style="font-size:11px;font-weight:700;color:#4a6b8a;text-transform:uppercase;letter-spacing:1px;">'
-        'Model Confidence</p>',
-        unsafe_allow_html=True,
-    )
-    st.progress(confidence, text=f"{conf_pct}% confident — XGBoost model")
+    # ── Analysis + Confidence (side by side) ──────────────
+    st.markdown('<div class="result-grid">', unsafe_allow_html=True)
 
-    if probs:
+    st.markdown('<div>', unsafe_allow_html=True)
+    with st.container():      
         st.markdown(
-            '<p style="font-size:11px;font-weight:700;color:#4a6b8a;margin-top:10px;">'
-            'Class Probabilities</p>',
-            unsafe_allow_html=True,
-        )
-        for cls, prob in probs.items():
-            pct = round(prob * 100, 1)
-            st.markdown(
-                f'<div style="display:flex;justify-content:space-between;font-size:12px;color:#4a6b8a;">'
-                f'<span>{cls}</span><span style="font-weight:600;">{pct}%</span></div>',
-                unsafe_allow_html=True,
-            )
-
-    if warnings:
-        st.warning("\n\n".join(f"• {w}" for w in warnings))
-
-    # ── Analysis card ──────────────────────────────────────────
-    with st.container():
-        st.markdown('<div class="pondiq-card">', unsafe_allow_html=True)
-        st.markdown(
-            '<p style="font-size:11px;font-weight:700;color:#4a6b8a;text-transform:uppercase;letter-spacing:1px;">'
-            'Analysis</p>',
+            '<p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#4a6b8a;'
+            'text-transform:uppercase;letter-spacing:1px;">Analysis</p>',
             unsafe_allow_html=True,
         )
         st.markdown(reasons_map.get(label, reasons_map["Feed Now"]))
         st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # ── Action Steps ───────────────────────────────────────────
-    tips = tips_map.get(label, tips_map["Feed Now"])
-    with st.container():
-        st.markdown('<div class="pondiq-card">', unsafe_allow_html=True)
+    st.markdown('<div>', unsafe_allow_html=True)
+    if probs:
+        with st.container():           
+            st.markdown(
+                '<p style="margin:0 0 10px;font-size:11px;font-weight:700;color:#4a6b8a;'
+                'text-transform:uppercase;letter-spacing:1px;">Model Confidence</p>',
+                unsafe_allow_html=True,
+            )
+            st.progress(confidence, text=f"{conf_pct}% confident — XGBoost model")
+            for cls, prob in probs.items():
+                pct = round(prob * 100, 1)
+                st.markdown(
+                    f'<div style="display:flex;justify-content:space-between;font-size:12px;color:#4a6b8a;">'
+                    f'<span>{cls}</span><span style="font-weight:600;">{pct}%</span></div>',
+                    unsafe_allow_html=True,
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    if warnings:
+        st.warning("\n\n".join(f"• {w}" for w in warnings))
+
+    # ── Action Steps ───────────────────────────────────────
+    with st.container():        
         st.markdown(
-            '<p style="font-size:11px;font-weight:700;color:#4a6b8a;text-transform:uppercase;letter-spacing:1px;">'
-            'Action Steps</p>',
+            '<p style="margin:0 0 14px;font-size:11px;font-weight:700;color:#4a6b8a;'
+            'text-transform:uppercase;letter-spacing:1px;">Action Steps</p>',
             unsafe_allow_html=True,
         )
         for i, tip in enumerate(tips, 1):
             st.markdown(
                 f'<div class="tip-row">'
                 f'<div class="tip-number" style="background:{cfg["tip_bg"]};">{i}</div>'
-                f'<span style="font-size:14px;color:#0f2340;line-height:1.55;">{tip}</span>'
-                f'</div>',
+                f'<span style="font-size:14px;color:#0f2340;line-height:1.55;">{tip}</span></div>',
                 unsafe_allow_html=True,
             )
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # ── Next check ─────────────────────────────────────────────
+    # ── Next check ─────────────────────────────────────────
     nc = next_check_map.get(label, next_check_map["Feed Now"])
     st.info(f"**🕐 Next Check:** {nc}")
 
-    # ── Actions ────────────────────────────────────────────────
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🔄 New Reading", key="result_new_reading", use_container_width=True):
-            st.session_state._reset_trigger = True
-            st.session_state.page = "entry"
-            st.rerun()
-    with col2:
-        if st.button("🏠 Home", key="result_home", use_container_width=True):
+    # ── Actions ────────────────────────────────────────────
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_home, col_hist = st.columns(2)
+    with col_home:
+        if st.button("🏠  Home", use_container_width=True, type="primary", key="result_home"):
             st.session_state.pop("_last_result", None)
+            st.session_state.pop("_last_input", None)
             st.session_state.page = "welcome"
             st.rerun()
+    with col_hist:
+        if st.button("📊  History", use_container_width=True, type="secondary", key="result_history"):
+            st.session_state.page = "history"
+            st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+def render_entry() -> None:
+    # ── Blue header bar with back arrow ────────────────────
+    st.markdown(
+        '<div class="pondiq-header" style="margin:0 -2rem 24px; border-radius:0;">'
+        '<div class="header-row">'
+        '<div style="flex:1;">'
+        '<h2 style="font-size:22px;">Water Quality Readings</h2>'
+        '<p class="subtitle">Enter all 6 parameters, then tap the button</p>'
+        '</div>'
+        '</div>'
+        '<div class="progress-bar"><div class="progress-bar-fill"></div></div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="app-inner">', unsafe_allow_html=True)
+
+    # ── Back arrow button ──────────────────────────────────
+    if st.button("←  Back to Home", key="entry_back_home", use_container_width=False):
+        st.session_state.pop("_last_result", None)
+        st.session_state.page = "welcome"
+        st.rerun()
+
+    # Handle reset trigger
+    if st.session_state.get("_reset_trigger"):
+        for k, v in DEFAULTS.items():
+            st.session_state[k] = v
+        st.session_state._reset_trigger = False
+        st.session_state.pop("_last_result", None)
+        st.session_state.pop("_last_input", None)
+
+    # Server health
+    health = api_health()
+    if health:
+        st.success("✅ AQUASENSE AI ML model connected")
+    else:
+        st.warning("⚠️ ML model offline — API server may need restart")
+
+    # ── 2-column grid of slider cards ───────────────────────
+    st.markdown('<div class="param-grid">', unsafe_allow_html=True)
+    for reading in READINGS:
+        st.markdown('<div>', unsafe_allow_html=True)
+        _render_slider_card(reading)
+        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Action buttons (side by side on desktop) ────────────
+    col_predict, col_reset = st.columns([2, 1])
+    with col_predict:
+        predict_clicked = st.button(
+            "✨  Get Recommendation & Prediction",
+            use_container_width=True, type="primary", key="entry_predict",
+        )
+    with col_reset:
+        reset_clicked = st.button(
+            "↺  Reset All",
+            use_container_width=True, type="secondary", key="entry_reset",
+        )
+
+    if reset_clicked:
+        st.session_state._reset_trigger = True
+        st.rerun()
+
+    # ── Prediction ───────────────────────────────────────────
+    if predict_clicked:
+        input_data = {
+            "do": st.session_state.do,
+            "ph": st.session_state.ph,
+            "ammonia": st.session_state.ammonia,
+            "temperature": st.session_state.temperature,
+            "nitrate": st.session_state.nitrate,
+            "turbidity": st.session_state.turbidity,
+        }
+        with st.spinner("Analysing with ML model…"):
+            result = api_predict(input_data)
+
+        if result:
+            st.session_state._last_result = result
+            st.session_state._last_input = input_data
+            # Save to history
+            now = datetime.now()
+            hour_12 = now.hour % 12 or 12
+            ampm = "AM" if now.hour < 12 else "PM"
+            lbl = result["label"]
+            if lbl == "Prime Feed":
+                lbl = "Feed Now"
+            entry = {
+                "date": now.strftime("%a, %d %b"),
+                "time": f"{hour_12}:{now.strftime('%M')} {ampm}",
+                "decision": lbl,
+                "do": input_data["do"],
+                "ph": input_data["ph"],
+                "ammonia": input_data["ammonia"],
+                "temp": input_data["temperature"],
+                "nitrate": input_data["nitrate"],
+                "turbidity": input_data["turbidity"],
+            }
+            if "_history" not in st.session_state:
+                st.session_state._history = []
+            st.session_state._history.insert(0, entry)
+            st.session_state.page = "result"
+            st.rerun()
+        else:
+            st.error(
+                "Could not reach the ML model. The API server may need to be restarted."
+            )
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ── Page: History ────────────────────────────────────────────────────
 MOCK_HISTORY = [
-    {"date": "Today",        "time": "7:12 AM", "decision": "Feed Now",   "do": 6.8,
-        "ph": 7.1, "ammonia": 0.15, "temp": 28, "nitrate": 18, "turbidity": 2},
-    {"date": "Yesterday",    "time": "6:58 AM", "decision": "Reduce Feed",  "do": 4.8,
-        "ph": 7.4, "ammonia": 0.55, "temp": 31, "nitrate": 25, "turbidity": 3},
-    {"date": "Mon, 26 May",  "time": "7:03 AM", "decision": "Feed Now",   "do": 7.2,
-        "ph": 7.0, "ammonia": 0.10, "temp": 27, "nitrate": 14, "turbidity": 2},
-    {"date": "Sun, 25 May",  "time": "7:30 AM", "decision": "Halt Feeding", "do": 2.8,
-        "ph": 6.2, "ammonia": 2.20, "temp": 34, "nitrate": 60, "turbidity": 5},
-    {"date": "Sat, 24 May",  "time": "6:50 AM", "decision": "Feed Now",   "do": 6.5,
-        "ph": 7.3, "ammonia": 0.20, "temp": 27, "nitrate": 16, "turbidity": 2},
-    {"date": "Fri, 23 May",  "time": "7:15 AM", "decision": "Feed Now",   "do": 7.0,
-        "ph": 7.2, "ammonia": 0.12, "temp": 26, "nitrate": 12, "turbidity": 2},
-    {"date": "Thu, 22 May",  "time": "7:00 AM", "decision": "Reduce Feed",  "do": 4.5,
-        "ph": 7.6, "ammonia": 0.60, "temp": 30, "nitrate": 30, "turbidity": 4},
+    {"date": "Today", "time": "7:12 AM", "decision": "Feed Now", "do": 6.8, "ph": 7.1,
+     "ammonia": 0.15, "temp": 28, "nitrate": 18, "turbidity": 2},
+    {"date": "Yesterday", "time": "6:58 AM", "decision": "Reduce Feed", "do": 4.8, "ph": 7.4,
+     "ammonia": 0.55, "temp": 31, "nitrate": 25, "turbidity": 3},
+    {"date": "Mon, 26 May", "time": "7:03 AM", "decision": "Feed Now", "do": 7.2, "ph": 7.0,
+     "ammonia": 0.10, "temp": 27, "nitrate": 14, "turbidity": 2},
+    {"date": "Sun, 25 May", "time": "7:30 AM", "decision": "Halt Feeding", "do": 2.8, "ph": 6.2,
+     "ammonia": 2.20, "temp": 34, "nitrate": 60, "turbidity": 5},
+    {"date": "Sat, 24 May", "time": "6:50 AM", "decision": "Feed Now", "do": 6.5, "ph": 7.3,
+     "ammonia": 0.20, "temp": 27, "nitrate": 16, "turbidity": 2},
+    {"date": "Fri, 23 May", "time": "7:15 AM", "decision": "Feed Now", "do": 7.0, "ph": 7.2,
+     "ammonia": 0.12, "temp": 26, "nitrate": 12, "turbidity": 2},
+    {"date": "Thu, 22 May", "time": "7:00 AM", "decision": "Reduce Feed", "do": 4.5, "ph": 7.6,
+     "ammonia": 0.60, "temp": 30, "nitrate": 30, "turbidity": 4},
 ]
 
 
 def _get_history() -> list[dict]:
-    """Merge user predictions with mock fallback data."""
     saved = st.session_state.get("_history", [])
+    if st.session_state.get("_cleared", False):
+        return saved
     return saved + MOCK_HISTORY
 
 
 def render_history() -> None:
-    st.markdown("## 📋 Reading History")
-
     history = _get_history()
-    if not history:
-        st.info("No readings yet. Run a pond check to see your history here.")
-        return
-
-    st.caption(f"{len(history)} reading{'s' if len(history) != 1 else ''}")
-
-    # Stats
     feed_now = sum(1 for e in history if e["decision"] == "Feed Now")
     reduce = sum(1 for e in history if e["decision"] == "Reduce Feed")
     stop = sum(1 for e in history if e["decision"] == "Halt Feeding")
 
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.metric("✅ Feed Days", feed_now)
-    with c2:
-        st.metric("⚠️ Reduce Days", reduce)
-    with c3:
-        st.metric("🚫 Stop Days", stop)
-
-    # Mini bar chart — DO levels (last 14 entries max)
-    st.markdown("---")
+    # ── Blue header bar with stats (desktop) ──────────────
     st.markdown(
-        '<p style="font-size:11px;font-weight:700;color:#4a6b8a;text-transform:uppercase;letter-spacing:1px;">'
-        '📊 DO Level History (mg/L)</p>',
+        '<div class="pondiq-header" style="margin:0 -2rem 24px; border-radius:0;">'
+        '<div class="header-row" style="margin-bottom:20px;">'
+        '<div style="flex:1;">'
+        '<h2 style="font-size:22px;">Reading History</h2>'
+        '<p class="subtitle">Last 7 days</p>'
+        '</div></div>'
+        f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">'
+        f'<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:14px 12px;text-align:center;">'
+        f'<p style="margin:0;font-size:20px;">✅</p>'
+        f'<p style="margin:4px 0 2px;font-family:Playfair Display,Georgia,serif;font-weight:700;color:#ffffff;font-size:22px;">{feed_now}</p>'
+        f'<p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;">Feed Days</p></div>'
+        f'<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:14px 12px;text-align:center;">'
+        f'<p style="margin:0;font-size:20px;">⚠️</p>'
+        f'<p style="margin:4px 0 2px;font-family:Roboto Slab,serif;font-weight:700;color:#ffffff;font-size:22px;">{reduce}</p>'
+        f'<p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;">Reduce Days</p></div>'
+        f'<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:14px 12px;text-align:center;">'
+        f'<p style="margin:0;font-size:20px;">🚫</p>'
+        f'<p style="margin:4px 0 2px;font-family:Roboto Slab,serif;font-weight:700;color:#ffffff;font-size:22px;">{stop}</p>'
+        f'<p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;">Stop Days</p></div>'
+        '</div></div>',
         unsafe_allow_html=True,
     )
-    chart_entries = list(reversed(history[-14:]))
+
+    st.markdown('<div class="app-inner">', unsafe_allow_html=True)
+
+    # ── Back arrow button ──────────────────────────────────
+    if st.button("←  Back to Check Pond", key="hist_back_entry", use_container_width=False):
+        st.session_state.page = "entry"
+        st.rerun()
+
+    if not history:
+        st.info("No readings yet. Run a pond check to see your history here.")
+        st.markdown('</div>', unsafe_allow_html=True)
+        return
+
+    # ── Mini bar chart ─────────────────────────────────────
+   
+    st.markdown(
+        '<p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#4a6b8a;'
+        'text-transform:uppercase;letter-spacing:1px;">📊 DO Level This Week (mg/L)</p>',
+        unsafe_allow_html=True,
+    )
+    chart_entries = list(reversed(history[-7:]))
     chart_data = pd.DataFrame(
         [{"Day": e["date"].split(",")[0][:3] if "," in e["date"] else e["date"][:3],
-          "DO": e["do"], "Decision": e["decision"]}
-         for e in chart_entries]
+          "DO": e["do"], "Decision": e["decision"]} for e in chart_entries]
     )
-    color_map = {"Feed Now": "#0e7a3e",
-                 "Reduce Feed": "#b45309", "Halt Feeding": "#b91c1c"}
     st.bar_chart(chart_data, x="Day", y="DO", color="Decision")
+    st.markdown(
+        '<div style="display:flex;gap:16px;justify-content:center;margin-top:4px;">'
+        '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#4a6b8a;">'
+        '<span style="width:10px;height:10px;border-radius:3px;background:#0e7a3e;display:inline-block;"></span> Feed Now</span>'
+        '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#4a6b8a;">'
+        '<span style="width:10px;height:10px;border-radius:3px;background:#b45309;display:inline-block;"></span> Reduce Feed</span>'
+        '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#4a6b8a;">'
+        '<span style="width:10px;height:10px;border-radius:3px;background:#b91c1c;display:inline-block;"></span> Stop Feeding</span>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # History entries
-    st.markdown("---")
+    # ── Feed log entries ─────────────────────────────────────
     decision_cfg = {
-        "Feed Now":   {"icon": "✅", "color": "#0e7a3e", "bg": "#e6f5ee"},
+        "Feed Now":     {"icon": "✅", "color": "#0e7a3e", "bg": "#e6f5ee"},
         "Reduce Feed":  {"icon": "⚠️", "color": "#b45309", "bg": "#fef3e2"},
         "Halt Feeding": {"icon": "🚫", "color": "#b91c1c", "bg": "#fef2f2"},
     }
@@ -766,28 +1044,31 @@ def render_history() -> None:
             f'<div class="history-entry">'
             f'<div style="width:42px;height:42px;border-radius:10px;background:{dc["bg"]};'
             f'display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
-            f'<span style="font-size:20px;">{dc["icon"]}</span></div>'
+            f'<span style="font-size:22px;">{dc["icon"]}</span></div>'
             f'<div style="flex:1;min-width:0;">'
             f'<p style="margin:0;font-weight:700;color:#0f2340;font-size:14px;">{entry["decision"]}</p>'
             f'<p style="margin:2px 0 0;color:#4a6b8a;font-size:12px;">{entry["date"]} · {entry["time"]}</p>'
             f'</div>'
             f'<div style="text-align:right;flex-shrink:0;">'
-            f'<p style="margin:0;font-family:Roboto Slab,serif;font-weight:700;color:#1a5fa8;font-size:14px;">DO {entry["do"]}</p>'
+            f'<p style="margin:0;font-family:Playfair Display,Georgia,serif;font-weight:700;color:#1a5fa8;font-size:14px;">DO {entry["do"]}</p>'
             f'<p style="margin:0;color:#4a6b8a;font-size:11px;">pH {entry["ph"]} · {entry["temp"]}°C</p>'
             f'</div></div>',
             unsafe_allow_html=True,
         )
 
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("Clear History", key="clear_history", use_container_width=True, type="secondary"):
+        st.session_state._history = []
+        st.session_state._cleared = True
+        st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
 
 # ── Main ─────────────────────────────────────────────────────────────
 def start_api() -> None:
-    """Start the FastAPI server (pondiq_api.app) in a background process.
-
-    Uses the same Python executable running Streamlit so the environment
-    is consistent. Logs are suppressed by default; set `API_PORT` env var
-    to change the port.
-    """
-    port = int(os.environ.get("API_PORT", 8000))
+    """Start the FastAPI server in a background process."""
+    port = int(os.environ.get("API_PORT", 8001))
     cmd = [sys.executable, "-m", "uvicorn", "pondiq_api:app", "--host", "0.0.0.0", "--port", str(port)]
     try:
         with open(os.devnull, "w") as devnull:
@@ -795,32 +1076,30 @@ def start_api() -> None:
     except Exception:
         return
 
+
 def main() -> None:
     inject_css()
-    # Start the FastAPI server in background so the Streamlit UI can call it
     start_api()
 
-    # Init session state
     if "page" not in st.session_state:
         st.session_state.page = "welcome"
 
     page = st.session_state.page
-
-    # Render active page
     if page == "welcome":
         render_welcome()
     elif page == "entry":
         render_entry()
     elif page == "result":
-        render_result_page()
+        render_result()
     elif page == "history":
         render_history()
 
-    # Bottom navigation
-    with st.container():
-        st.markdown('<div class="pondiq-nav">', unsafe_allow_html=True)
-        render_nav()
-        st.markdown('</div>', unsafe_allow_html=True)
+    # ── Footer ────────────────────────────────────────────
+    st.markdown(
+        '<div class="pondiq-footer">'
+        '© 2026 Code4Food Security &nbsp;|&nbsp; Developed by FYNBYTE</div>',
+        unsafe_allow_html=True,
+    )
 
 
 if __name__ == "__main__":
