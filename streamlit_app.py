@@ -453,13 +453,9 @@ def inject_css() -> None:
             height: 148px;
             margin-bottom: 16px;
             position: relative;
-            background: #0f2340;
-        }
-        .how-it-works-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
+            background-color: #0f2340;
+            background-size: cover;
+            background-position: center;
         }
         .how-it-works-gradient {
             position: absolute;
@@ -922,9 +918,7 @@ def render_welcome() -> None:
                 f'<span class="how-step-text">{step}</span></div>'
             )
         st.markdown(
-            f'<div class="how-it-works-block">'
-            f'<img src="{HOW_IT_B64}" alt="Fish farmer feeding tilapia" '
-            f'class="how-it-works-img"/>'
+            f'<div class="how-it-works-block" style="background-image:url({HOW_IT_B64})">'
             f'<div class="how-it-works-gradient"></div>'
             f'<div class="how-it-works-text">'
             f'<p class="how-it-works-label">How it works</p>'
