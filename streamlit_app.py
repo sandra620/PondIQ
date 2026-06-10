@@ -25,9 +25,9 @@ from pathlib import Path
 # ── Page config (must be first Streamlit call) ──────────────────────
 st.set_page_config(
     page_title="AQUASENSE AI — Fish Feeding Advisor",
-    page_icon="🐟",
+    page_icon="",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="auto",
 )
 
 # ── Image helpers ────────────────────────────────────────────────────
@@ -951,9 +951,6 @@ def render_welcome() -> None:
 
     # CTA
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("✨  Start Pond Check  →", use_container_width=True, type="primary", key="welcome_cta"):
-        st.session_state.page = "entry"
-        st.rerun()
     st.caption("Free to use · Works on basic mobile data · No account needed")
 
     st.markdown('</div>', unsafe_allow_html=True)
@@ -961,22 +958,22 @@ def render_welcome() -> None:
 
 # ── Page: Data Entry & Inline Prediction ─────────────────────────────
 READINGS = [
-    {"id": "do", "label": "Dissolved Oxygen (DO)", "emoji": "💧", "min": 0.0, "max": 14.0,
+    {"id": "do", "label": "Dissolved Oxygen (DO)", "emoji": "", "min": 0.0, "max": 14.0,
      "step": 0.1, "unit": " mg/L", "good": "5–9 mg/L is ideal",
      "desc": "Measure with a DO meter or test kit near the pond surface. Low DO stresses fish and reduces feed intake."},
-    {"id": "ph", "label": "pH Level", "emoji": "⚗️", "min": 4.0, "max": 10.0,
+    {"id": "ph", "label": "pH Level", "emoji": "", "min": 4.0, "max": 10.0,
      "step": 0.1, "unit": "", "good": "6.5–8.5 is optimal",
      "desc": "Use a pH test strip or meter. Test in the morning before noon for the most accurate reading."},
-    {"id": "ammonia", "label": "Ammonia (mg/L)", "emoji": "🧪", "min": 0.0, "max": 5.0,
+    {"id": "ammonia", "label": "Ammonia (mg/L)", "emoji": "", "min": 0.0, "max": 5.0,
      "step": 0.05, "unit": " mg/L", "good": "Below 0.5 mg/L is safe",
      "desc": "Use an ammonia test kit. High ammonia causes gill damage and suppresses appetite."},
-    {"id": "temperature", "label": "Temperature", "emoji": "🌡️", "min": 10.0, "max": 40.0,
+    {"id": "temperature", "label": "Temperature", "emoji": "", "min": 10.0, "max": 40.0,
      "step": 0.5, "unit": "°C", "good": "26–32°C is best",
      "desc": "Measure with a thermometer just below the pond surface, away from any inlet pipes."},
-    {"id": "nitrate", "label": "Nitrate (PPM)", "emoji": "🔬", "min": 0.0, "max": 200.0,
+    {"id": "nitrate", "label": "Nitrate (PPM)", "emoji": "", "min": 0.0, "max": 200.0,
      "step": 1.0, "unit": " ppm", "good": "Below 40 ppm is safe",
      "desc": "Use a nitrate test kit. Elevated nitrate over time indicates poor water exchange."},
-    {"id": "turbidity", "label": "Turbidity", "emoji": "🌊", "min": 1.0, "max": 5.0,
+    {"id": "turbidity", "label": "Turbidity", "emoji": "", "min": 1.0, "max": 5.0,
      "step": 1.0, "unit": "", "good": "2–3 = slightly green (ideal)",
      "desc": "Estimate water clarity visually — can you see your hand 30 cm below the surface?"},
 ]
@@ -1016,13 +1013,6 @@ def _render_slider_card(reading: dict) -> None:
             f'</div></div>',
             unsafe_allow_html=True,
         )
-
-        # Info expander
-        with st.expander(f"ℹ️  About {reading['label']}"):
-            st.markdown(
-                f'<div class="info-box"><p>{reading["desc"]}</p></div>',
-                unsafe_allow_html=True,
-            )
 
         # Number input for direct value entry
         col_input, col_unit = st.columns([3, 1])
@@ -1067,9 +1057,9 @@ def render_result() -> None:
     warnings = result.get("warning_flags", [])
 
     configs = {
-        "Feed Now":     {"css_class": "feed-now", "icon": "✅", "tip_bg": "#0e7a3e"},
-        "Reduce Feed":  {"css_class": "reduce",   "icon": "⚠️", "tip_bg": "#b45309"},
-        "Halt Feeding": {"css_class": "stop",     "icon": "🚫", "tip_bg": "#b91c1c"},
+        "Feed Now":     {"css_class": "feed-now", "icon": "", "tip_bg": "#0e7a3e"},
+        "Reduce Feed":  {"css_class": "reduce",   "icon": "", "tip_bg": "#b45309"},
+        "Halt Feeding": {"css_class": "stop",     "icon": "", "tip_bg": "#b91c1c"},
     }
     cfg = configs.get(label, configs["Feed Now"])
     conf_pct = round(confidence * 100)
@@ -1125,7 +1115,7 @@ def render_result() -> None:
         f'<div class="deco-circle deco-1"></div>'
         f'<div class="deco-circle deco-2"></div>'
         f'<div class="banner-content">'
-        f'<div class="icon-circle">{cfg["icon"]}</div>'
+        f'<div class="icon-circle"></div>'
         f'<div>'
         f'<p class="label">Today\'s Decision</p>'
         f'<h2 class="title">{label.upper()}</h2>'
@@ -1134,13 +1124,6 @@ def render_result() -> None:
     )
 
     st.markdown('<div class="app-inner">', unsafe_allow_html=True)
-
-    # ── Back button ────────────────────────────────────────
-    if st.button("←  Back to Readings", key="result_back_entry", use_container_width=False):
-        st.session_state.pop("_last_result", None)
-        st.session_state.pop("_last_input", None)
-        st.session_state.page = "entry"
-        st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1199,21 +1182,7 @@ def render_result() -> None:
 
     # ── Next check ─────────────────────────────────────────
     nc = next_check_map.get(label, next_check_map["Feed Now"])
-    st.info(f"**🕐 Next Check:** {nc}")
-
-    # ── Actions ────────────────────────────────────────────
-    st.markdown("<br>", unsafe_allow_html=True)
-    col_home, col_hist = st.columns(2)
-    with col_home:
-        if st.button("🏠  Home", use_container_width=True, type="primary", key="result_home"):
-            st.session_state.pop("_last_result", None)
-            st.session_state.pop("_last_input", None)
-            st.session_state.page = "welcome"
-            st.rerun()
-    with col_hist:
-        if st.button("📊  History", use_container_width=True, type="secondary", key="result_history"):
-            st.session_state.page = "history"
-            st.rerun()
+    st.info(f"**Next Check:** {nc}")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1235,12 +1204,6 @@ def render_entry() -> None:
 
     st.markdown('<div class="app-inner">', unsafe_allow_html=True)
 
-    # ── Back arrow button ──────────────────────────────────
-    if st.button("←  Back to Home", key="entry_back_home", use_container_width=False):
-        st.session_state.pop("_last_result", None)
-        st.session_state.page = "welcome"
-        st.rerun()
-
     # Handle reset trigger
     if st.session_state.get("_reset_trigger"):
         for k, v in DEFAULTS.items():
@@ -1252,9 +1215,9 @@ def render_entry() -> None:
     # Server health
     health = api_health()
     if health:
-        st.success("✅ AQUASENSE AI ML model connected")
+        st.success("AQUASENSE AI ML model connected")
     else:
-        st.warning("⚠️ ML model offline — API server may need restart")
+        st.warning("ML model offline — API server may need restart")
 
     # ── 2-column grid of slider cards ───────────────────────
     st.markdown('<div class="param-grid">', unsafe_allow_html=True)
@@ -1270,12 +1233,12 @@ def render_entry() -> None:
     col_predict, col_reset = st.columns([2, 1])
     with col_predict:
         predict_clicked = st.button(
-            "✨  Get Recommendation & Prediction",
+            "Get Recommendation & Prediction",
             use_container_width=True, type="primary", key="entry_predict",
         )
     with col_reset:
         reset_clicked = st.button(
-            "↺  Reset All",
+            "Reset All",
             use_container_width=True, type="secondary", key="entry_reset",
         )
 
@@ -1349,6 +1312,17 @@ MOCK_HISTORY = [
 ]
 
 
+def _day_label(date_str: str) -> str:
+    """Return a short label like 'Wed 28' or 'Today'."""
+    if "," in date_str:
+        parts = date_str.split(",")
+        day_abbr = parts[0][:3]
+        rest = parts[1].strip()
+        date_num = rest.split()[0] if rest else ""
+        return f"{day_abbr} {date_num}"
+    return date_str
+
+
 def _get_history() -> list[dict]:
     saved = st.session_state.get("_history", [])
     if st.session_state.get("_cleared", False):
@@ -1368,19 +1342,16 @@ def render_history() -> None:
         '<div class="header-row" style="margin-bottom:20px;">'
         '<div style="flex:1;">'
         '<h2 style="font-size:22px;">Reading History</h2>'
-        '<p class="subtitle">Last 7 days</p>'
+        '<p class="subtitle">Last 30 days</p>'
         '</div></div>'
         f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">'
         f'<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:14px 12px;text-align:center;">'
-        f'<p style="margin:0;font-size:20px;">✅</p>'
         f'<p style="margin:4px 0 2px;font-family:Playfair Display,Georgia,serif;font-weight:700;color:#ffffff;font-size:22px;">{feed_now}</p>'
         f'<p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;">Feed Days</p></div>'
         f'<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:14px 12px;text-align:center;">'
-        f'<p style="margin:0;font-size:20px;">⚠️</p>'
         f'<p style="margin:4px 0 2px;font-family:Roboto Slab,serif;font-weight:700;color:#ffffff;font-size:22px;">{reduce}</p>'
         f'<p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;">Reduce Days</p></div>'
         f'<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:14px 12px;text-align:center;">'
-        f'<p style="margin:0;font-size:20px;">🚫</p>'
         f'<p style="margin:4px 0 2px;font-family:Roboto Slab,serif;font-weight:700;color:#ffffff;font-size:22px;">{stop}</p>'
         f'<p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;">Stop Days</p></div>'
         '</div></div>',
@@ -1388,11 +1359,6 @@ def render_history() -> None:
     )
 
     st.markdown('<div class="app-inner">', unsafe_allow_html=True)
-
-    # ── Back arrow button ──────────────────────────────────
-    if st.button("←  Back to Check Pond", key="hist_back_entry", use_container_width=False):
-        st.session_state.page = "entry"
-        st.rerun()
 
     if not history:
         st.info("No readings yet. Run a pond check to see your history here.")
@@ -1403,12 +1369,12 @@ def render_history() -> None:
    
     st.markdown(
         '<p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#4a6b8a;'
-        'text-transform:uppercase;letter-spacing:1px;">📊 DO Level This Week (mg/L)</p>',
+        'text-transform:uppercase;letter-spacing:1px;">DO Level Last 30 Days (mg/L)</p>',
         unsafe_allow_html=True,
     )
-    chart_entries = list(reversed(history[-7:]))
+    chart_entries = list(reversed(history[-30:]))
     chart_data = pd.DataFrame(
-        [{"Day": e["date"].split(",")[0][:3] if "," in e["date"] else e["date"][:3],
+        [{"Day": _day_label(e["date"]),
           "DO": e["do"], "Decision": e["decision"]} for e in chart_entries]
     )
     st.bar_chart(chart_data, x="Day", y="DO", color="Decision")
@@ -1427,9 +1393,9 @@ def render_history() -> None:
 
     # ── Feed log entries ─────────────────────────────────────
     decision_cfg = {
-        "Feed Now":     {"icon": "✅", "color": "#0e7a3e", "bg": "#e6f5ee"},
-        "Reduce Feed":  {"icon": "⚠️", "color": "#b45309", "bg": "#fef3e2"},
-        "Halt Feeding": {"icon": "🚫", "color": "#b91c1c", "bg": "#fef2f2"},
+        "Feed Now":     {"icon": "", "color": "#0e7a3e", "bg": "#e6f5ee"},
+        "Reduce Feed":  {"icon": "", "color": "#b45309", "bg": "#fef3e2"},
+        "Halt Feeding": {"icon": "", "color": "#b91c1c", "bg": "#fef2f2"},
     }
 
     for entry in history:
@@ -1458,6 +1424,206 @@ def render_history() -> None:
     st.markdown('</div>', unsafe_allow_html=True)
 
 
+# ── Page: Analytics ──────────────────────────────────────────────────
+def render_analytics() -> None:
+    """Trends, insights, and analysis dashboard for the farmer."""
+    history = _get_history()
+
+    st.markdown(
+        '<div class="pondiq-header" style="margin:0 -2rem 24px; border-radius:0;">'
+        '<div class="header-row">'
+        '<div style="flex:1;">'
+        '<h2 style="font-size:22px;">Pond Analytics</h2>'
+        '<p class="subtitle">Trends, patterns &amp; insights from your readings</p>'
+        '</div></div>'
+        '<div class="progress-bar"><div class="progress-bar-fill"></div></div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="app-inner">', unsafe_allow_html=True)
+
+    if not history:
+        st.info("No readings yet. Run a pond check to unlock analytics and trends.")
+        st.markdown('</div>', unsafe_allow_html=True)
+        return
+
+    # ── Summary KPI cards ─────────────────────────────────
+    total = len(history)
+    feed_now = sum(1 for e in history if e["decision"] == "Feed Now")
+    reduce = sum(1 for e in history if e["decision"] == "Reduce Feed")
+    stop = sum(1 for e in history if e["decision"] == "Halt Feeding")
+
+    # ── Stats for later sections ─────────────────────────
+    recent = history[:30]
+    low_do_days = sum(1 for e in recent if e["do"] < 5.0)
+    high_ammonia_days = sum(1 for e in recent if e["ammonia"] > 0.5)
+    high_temp_days = sum(1 for e in recent if e["temp"] > 32)
+    extreme_ph_days = sum(1 for e in recent if e["ph"] < 6.5 or e["ph"] > 8.5)
+
+    kpi_cols = st.columns(4)
+    kpis = [
+        (f"{feed_now}", "Feed Days", "#0e7a3e"),
+        (f"{reduce}", "Reduce Days", "#b45309"),
+        (f"{stop}", "Stop Days", "#b91c1c"),
+        (str(total), "Total Checks", "#1a5fa8"),
+    ]
+    for col, (val, label, color) in zip(kpi_cols, kpis):
+        with col:
+            st.markdown(
+                f'<div style="background:#ffffff;border-radius:12px;padding:16px 12px;'
+                f'text-align:center;border:1px solid rgba(0,0,0,0.06);'
+                f'box-shadow:0 1px 3px rgba(0,0,0,0.03);">'
+                f'<p style="margin:4px 0 2px;font-family:Playfair Display,Georgia,serif;'
+                f'font-weight:700;color:{color};font-size:24px;">{val}</p>'
+                f'<p style="margin:0;color:#64748b;font-size:11px;">{label}</p>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Row 1: Feed decision distribution + DO trend ──────
+    col_left, col_right = st.columns(2)
+
+    with col_left:
+        st.markdown(
+            '<p style="margin:0 0 10px;font-size:11px;font-weight:700;color:#4a6b8a;'
+            'text-transform:uppercase;letter-spacing:1px;">Feed Decision Breakdown</p>',
+            unsafe_allow_html=True,
+        )
+        if total > 0:
+            dist_df = pd.DataFrame({
+                "Decision": ["Feed Now", "Reduce Feed", "Halt Feeding"],
+                "Count": [feed_now, reduce, stop],
+            })
+            st.bar_chart(dist_df.set_index("Decision"), use_container_width=True)
+
+    with col_right:
+        st.markdown(
+            '<p style="margin:0 0 10px;font-size:11px;font-weight:700;color:#4a6b8a;'
+            'text-transform:uppercase;letter-spacing:1px;">Dissolved Oxygen Trend (mg/L)</p>',
+            unsafe_allow_html=True,
+        )
+        chart_entries = list(reversed(history[-30:]))
+        do_df = pd.DataFrame([
+            {
+                "Day": _day_label(e["date"]),
+                "DO (mg/L)": e["do"],
+            }
+            for e in chart_entries
+        ])
+        st.line_chart(do_df.set_index("Day"), use_container_width=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Row 2: pH trend + Temperature trend ───────────────
+    col_left2, col_right2 = st.columns(2)
+
+    with col_left2:
+        st.markdown(
+            '<p style="margin:0 0 10px;font-size:11px;font-weight:700;color:#4a6b8a;'
+            'text-transform:uppercase;letter-spacing:1px;">pH Level Trend</p>',
+            unsafe_allow_html=True,
+        )
+        ph_df = pd.DataFrame([
+            {
+                "Day": _day_label(e["date"]),
+                "pH": e["ph"],
+            }
+            for e in chart_entries
+        ])
+        st.line_chart(ph_df.set_index("Day"), use_container_width=True)
+
+    with col_right2:
+        st.markdown(
+            '<p style="margin:0 0 10px;font-size:11px;font-weight:700;color:#4a6b8a;'
+            'text-transform:uppercase;letter-spacing:1px;">Temperature Trend (°C)</p>',
+            unsafe_allow_html=True,
+        )
+        temp_df = pd.DataFrame([
+            {
+                "Day": _day_label(e["date"]),
+                "Temp (°C)": e["temp"],
+            }
+            for e in chart_entries
+        ])
+        st.line_chart(temp_df.set_index("Day"), use_container_width=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Row 3: Averages + Risk analysis ───────────────────
+    col_avg, col_risk = st.columns(2)
+
+    with col_avg:
+        st.markdown(
+            '<p style="margin:0 0 10px;font-size:11px;font-weight:700;color:#4a6b8a;'
+            'text-transform:uppercase;letter-spacing:1px;">30-Day Averages</p>',
+            unsafe_allow_html=True,
+        )
+        avg_do = round(sum(e["do"] for e in recent) / len(recent), 1)
+        avg_ph = round(sum(e["ph"] for e in recent) / len(recent), 1)
+        avg_temp = round(sum(e["temp"] for e in recent) / len(recent), 1)
+        avg_ammonia = round(sum(e["ammonia"] for e in recent) / len(recent), 2)
+        avg_nitrate = round(sum(e["nitrate"] for e in recent) / len(recent), 1)
+        avg_turbidity = round(sum(e["turbidity"] for e in recent) / len(recent), 1)
+
+        avg_items = [
+            ("Dissolved Oxygen", f"{avg_do} mg/L", avg_do < 5.0),
+            ("pH", f"{avg_ph}", avg_ph < 6.5 or avg_ph > 8.5),
+            ("Temperature", f"{avg_temp}°C", avg_temp < 26 or avg_temp > 32),
+            ("Ammonia", f"{avg_ammonia} mg/L", avg_ammonia > 0.5),
+            ("Nitrate", f"{avg_nitrate} ppm", avg_nitrate > 40),
+            ("Turbidity", f"{avg_turbidity}", avg_turbidity > 3),
+        ]
+        for label, value, alert in avg_items:
+            icon = "(!) " if alert else ""
+            color = "#b91c1c" if alert else "#0f2340"
+            st.markdown(
+                f'<div style="display:flex;justify-content:space-between;padding:8px 0;'
+                f'border-bottom:1px solid rgba(0,0,0,0.04);font-size:13px;">'
+                f'<span style="color:#4a6b8a;">{icon}{label}</span>'
+                f'<span style="font-weight:600;color:{color};">{value}</span></div>',
+                unsafe_allow_html=True,
+            )
+
+    with col_risk:
+        st.markdown(
+            '<p style="margin:0 0 10px;font-size:11px;font-weight:700;color:#4a6b8a;'
+            'text-transform:uppercase;letter-spacing:1px;">Risk Indicators</p>',
+            unsafe_allow_html=True,
+        )
+        # Low DO risk
+        low_do_days = sum(1 for e in recent if e["do"] < 5.0)
+        high_ammonia_days = sum(1 for e in recent if e["ammonia"] > 0.5)
+        high_temp_days = sum(1 for e in recent if e["temp"] > 32)
+        extreme_ph_days = sum(1 for e in recent if e["ph"] < 6.5 or e["ph"] > 8.5)
+
+        risks = [
+            ("Low DO (< 5 mg/L)", low_do_days, "Fish stressed, reduced feeding"),
+            ("High Ammonia (> 0.5)", high_ammonia_days, "Toxic buildup, gill damage risk"),
+            ("High Temp (> 32°C)", high_temp_days, "Heat stress, lower oxygen capacity"),
+            ("Extreme pH", extreme_ph_days, "Metabolic disruption risk"),
+        ]
+        for label, count, desc in risks:
+            pct = round(count / len(recent) * 100) if recent else 0
+            bar_color = "#b91c1c" if pct > 30 else ("#b45309" if pct > 0 else "#0e7a3e")
+            st.markdown(
+                f'<div style="margin-bottom:12px;">'
+                f'<div style="display:flex;justify-content:space-between;font-size:12px;'
+                f'color:#0f2340;margin-bottom:4px;">'
+                f'<span style="font-weight:500;">{label}</span>'
+                f'<span style="font-weight:600;color:{bar_color};">{count}/{len(recent)} days ({pct}%)</span></div>'
+                f'<div style="background:#e5e7eb;border-radius:3px;height:6px;">'
+                f'<div style="background:{bar_color};border-radius:3px;height:6px;width:{pct}%;"></div></div>'
+                f'<p style="margin:2px 0 0;font-size:10px;color:#64748b;">{desc}</p>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
 # ── Main ─────────────────────────────────────────────────────────────
 def start_api() -> None:
     """Start the FastAPI server in a background process."""
@@ -1477,6 +1643,41 @@ def main() -> None:
     if "page" not in st.session_state:
         st.session_state.page = "welcome"
 
+    # ── Sidebar Navigation ───────────────────────────────
+    with st.sidebar:
+        st.markdown(
+            '<div style="display:flex;align-items:center;gap:10px;padding:8px 0 16px;">'
+            '<span style="font-family:Playfair Display,Georgia,serif;font-weight:700;font-size:18px;color:#1a5fa8;">AQUASENSE AI</span>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown("---")
+
+        pages = [
+            {"id": "welcome", "label": "Home", "desc": "Welcome & overview"},
+            {"id": "entry", "label": "Pond Check", "desc": "Enter water readings"},
+            {"id": "analytics", "label": "Analytics", "desc": "Trends & insights"},
+            {"id": "history", "label": "History", "desc": "Past readings log"},
+        ]
+
+        for p in pages:
+            is_active = st.session_state.page == p["id"]
+            btn_style = (
+                "background:#e8f0fa;color:#1a5fa8;font-weight:700;border-left:3px solid #1a5fa8;"
+                if is_active
+                else "background:transparent;color:#374151;font-weight:500;border-left:3px solid transparent;"
+            )
+            if st.button(
+                p["label"],
+                key=f"nav_{p['id']}",
+                use_container_width=True,
+                type="primary" if is_active else "secondary",
+            ):
+                st.session_state.page = p["id"]
+                st.rerun()
+
+        st.markdown("---")
+
     page = st.session_state.page
     if page == "welcome":
         render_welcome()
@@ -1484,6 +1685,8 @@ def main() -> None:
         render_entry()
     elif page == "result":
         render_result()
+    elif page == "analytics":
+        render_analytics()
     elif page == "history":
         render_history()
 

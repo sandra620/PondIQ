@@ -22,6 +22,7 @@ from typing import List, Optional
 import joblib
 import numpy as np
 import pandas as pd
+import xgboost as xgb
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -97,6 +98,9 @@ class PredictionResult(BaseModel):
         description="Per-class probabilities")
     warning_flags: list[str] = Field(
         default_factory=list, description="Any hard-override warnings triggered")
+    feature_contributions: dict[str, float] = Field(
+        default_factory=dict,
+        description="Per-feature SHAP contribution toward the predicted class")
 
     model_config = {
         "json_schema_extra": {
@@ -164,9 +168,25 @@ def _predict_single(inp: WaterQualityInput) -> PredictionResult:
     df = _input_to_dataframe(inp)
     row_dict = df.iloc[0].to_dict()
 
-    probs = _model.predict_proba(df[FEATURES])[0]        # shape (3,)
+    X = df[FEATURES]
+    probs = _model.predict_proba(X)[0]        # shape (3,)
     pred_class = int(np.argmax(probs))
     confidence = float(probs[pred_class])
+
+    # SHAP feature contributions for the predicted class
+    booster = _model.get_booster()
+    dmat = xgb.DMatrix(X, feature_names=FEATURES)
+    contribs = booster.predict(dmat, pred_contribs=True)  # shape (1, 3, n_feat+1)
+    if contribs.ndim == 3:
+        # Multi-class: pick the predicted class row
+        shap_row = contribs[0, pred_class, :]
+    else:
+        shap_row = contribs[0, :]
+    # Last element is the bias (base value), features are everything before it
+    feature_contributions = {
+        FEATURES[i]: round(float(shap_row[i]), 4)
+        for i in range(len(FEATURES))
+    }
 
     return PredictionResult(
         predicted_class=pred_class,
@@ -176,6 +196,7 @@ def _predict_single(inp: WaterQualityInput) -> PredictionResult:
             CLASS_NAMES[i]: round(float(p), 4) for i, p in enumerate(probs)
         },
         warning_flags=_check_hard_overrides(row_dict),
+        feature_contributions=feature_contributions,
     )
 
 
